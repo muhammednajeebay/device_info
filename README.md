@@ -1,10 +1,10 @@
-# 📱 Device Intel: Premium Information Dashboard
+# 📱 Device Info: Premium Information Dashboard
 
 [![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)](https://flutter.dev)
 [![Architecture: BLoC](https://img.shields.io/badge/Architecture-BLoC-blue.svg?style=for-the-badge)](https://pub.dev/packages/flutter_bloc)
 [![Design: Glassmorphism](https://img.shields.io/badge/Design-Glassmorphism-purple.svg?style=for-the-badge)](#-design-vision)
 
-Transform your mobile experience with **Device Intel**, a premium, visually stunning dashboard that provides deep, real-time insights into your hardware. Built with a focus on performance, accuracy, and high-end aesthetics.
+Transform your mobile experience with **Device Info**, a premium, visually stunning dashboard that provides deep, real-time insights into your hardware. Built with a focus on performance, accuracy, and high-end aesthetics.
 
 ---
 
@@ -38,7 +38,7 @@ Leverages **Platform Channels** and **Method Channels** for efficient, low-laten
 ## 🛠️ Technical Deep Dive
 
 ### 🔌 Platform Channels: The Native Bridge
-Device Intel bypasses high-level plugins to communicate directly with the underlying OS for maximum accuracy and minimal latency.
+Device Info bypasses high-level plugins to communicate directly with the underlying OS for maximum accuracy and minimal latency.
 - **Method Channels**: Used for discrete, request-response data fetching such as device hardware specifications, OS versions, and initial storage metrics.
 - **Event Channels**: Leveraged for continuous, real-time data streams. This includes live tracking of battery percentage changes, thermal states, and high-frequency sensor telemetry (Accelerometer, Gyroscope).
 
@@ -49,7 +49,7 @@ To achieve the "premium" visual fidelity without sacrificing performance, the da
 - **Glow & Shaders**: Implements `MaskFilter.blur` and `RadialGradient` shaders to create futuristic lighting effects that react to real-time data.
 
 ### 🎭 Animation Orchestration
-Animations in Device Intel are treated as a first-class citizen, strictly controlled for both aesthetics and battery efficiency.
+Animations in Device Info are treated as a first-class citizen, strictly controlled for both aesthetics and battery efficiency.
 - **AnimationController**: Every kinetic widget (e.g., `LiquidWaveIcon`, `SystemPulseFlow`) uses a dedicated `AnimationController` for precise pixel-level control over its state.
 - **Tween Chaining**: Complex sequences, like the holographic flicker or the radar echo fade, are achieved by chaining multiple `Tween` objects.
 - **Declarative Intro Sequences**: Powered by `flutter_animate`, the splash screen and detail entry transitions use a declarative syntax for choreographed fades, scales, and blurs.
@@ -62,7 +62,7 @@ Animations in Device Intel are treated as a first-class citizen, strictly contro
 
 ## 🎨 Design Vision & Visual Identity
 
-**Device Intel** is built as a living energy system, where hardware metrics are transformed into immersive visual stories.
+**Device Info** is built as a living energy system, where hardware metrics are transformed into immersive visual stories.
 
 ### 🔋 Battery: Liquid Energy System
 - **Visual Identity**: Concept of a living energy container.
@@ -105,7 +105,7 @@ Animations in Device Intel are treated as a first-class citizen, strictly contro
 - **Animations**: Waves expand and fade with speed tied to signal strength; curved data packet paths.
 - **Interaction**: Tap for a "ping" wave burst; long press for connection test animation.
 
-### 🎯 Sensors: Radar Intelligence
+### 🎯 Sensors: Radar Infoligence
 - **Visual Identity**: Active radar scanning system.
 - **Primary Widget**: Grid-based radar with a rotating sweep line.
 - **Animations**: Sensors appear as dots (Cyan for Accelerometer, Purple for Gyro, etc.) as the sweep passes.
