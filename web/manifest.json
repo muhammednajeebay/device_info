@@ -1,6 +1,6 @@
 {
-    "name": "device_info",
-    "short_name": "device_info",
+    "name": "DEVICE INFO",
+    "short_name": "DEVICE INFO",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

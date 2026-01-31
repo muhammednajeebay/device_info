@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../blocs/settings/settings_bloc.dart';
+import '../../blocs/settings/settings_state.dart';
 
 class StorageBarChartIcon extends StatefulWidget {
   final Color color;
@@ -32,42 +35,63 @@ class _StorageBarChartIconState extends State<StorageBarChartIcon>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 60,
-      height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: List.generate(5, (index) {
-          return AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              final height =
-                  10.0 + (_targetHeights[index] * 40 * _controller.value);
-              return Container(
-                width: 6,
-                height: height,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [widget.color, widget.color.withOpacity(0.3)],
-                  ),
-                  borderRadius: BorderRadius.circular(2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: widget.color.withOpacity(0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+    return BlocConsumer<SettingsBloc, SettingsState>(
+      listener: (context, state) {
+        if (state.reducedMotion) {
+          _controller.stop();
+        } else if (!_controller.isAnimating) {
+          _controller.repeat(reverse: true);
+        }
+      },
+      builder: (context, state) {
+        return Container(
+          width: 60,
+          height: 60,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: List.generate(5, (index) {
+              return AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  final progress = state.reducedMotion
+                      ? 1.0
+                      : _controller.value;
+                  final height = 10.0 + (_targetHeights[index] * 40 * progress);
+                  return Container(
+                    width: 6,
+                    height: height,
+                    decoration: BoxDecoration(
+                      gradient: state.lowPowerMode
+                          ? null
+                          : LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                widget.color,
+                                widget.color.withOpacity(0.3),
+                              ],
+                            ),
+                      color: state.lowPowerMode ? widget.color : null,
+                      borderRadius: BorderRadius.circular(2),
+                      boxShadow: state.lowPowerMode
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: widget.color.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                     ),
-                  ],
-                ),
+                  );
+                },
               );
-            },
-          );
-        }),
-      ),
+            }),
+          ),
+        );
+      },
     );
   }
 }

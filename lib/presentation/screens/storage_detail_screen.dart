@@ -5,7 +5,7 @@ import 'package:device_info/utils/theme_constants.dart';
 import 'package:device_info/utils/text_styles.dart';
 import 'package:device_info/presentation/widgets/app_card.dart';
 import 'package:device_info/presentation/widgets/info_tile.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:device_info/presentation/widgets/data_mass_visualization.dart';
 
 class StorageDetailScreen extends StatelessWidget {
   const StorageDetailScreen({super.key});
@@ -13,7 +13,7 @@ class StorageDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Storage'), elevation: 0),
+      appBar: AppBar(title: const Text('Storage')),
       body: BlocBuilder<StorageBloc, StorageState>(
         builder: (context, state) {
           if (state is StorageLoading) {
@@ -25,11 +25,21 @@ class StorageDetailScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: AppColors.error),
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    'Error: ${state.message}',
-                    style: AppTextStyles.bodyLarge,
+                    'Failed to load storage info',
+                    style: AppTextStyles.titleLarge,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    state.message,
+                    style: AppTextStyles.bodySmall,
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -44,139 +54,79 @@ class StorageDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Internal Storage Chart
+                  // Hero Section: Data Mass Visualization
                   AppCard(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.lg,
+                    ),
+                    child: DataMassVisualization(
+                      usedPercentage: storage.usedPercentage,
+                      totalUsed: _formatBytes(storage.usedSpace),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sectionSpacing),
+
+                  // Storage Breakdown / Details
+                  Text(
+                    'Storage Analytics',
+                    style: AppTextStyles.headlineSmall.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
+                  AppCard(
+                    padding: EdgeInsets.zero,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.storage,
-                              color: CategoryColors.storage,
-                              size: AppIconSize.lg,
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Text(
-                              'Internal Storage',
-                              style: AppTextStyles.titleLarge,
-                            ),
-                          ],
+                        InfoTile(
+                          label: 'Total Capacity',
+                          value: _formatBytes(storage.totalSpace),
+                          icon: Icons.sd_storage,
+                          iconColor: CategoryColors.storage,
                         ),
-                        const SizedBox(height: AppSpacing.xl),
-                        SizedBox(
-                          height: 200,
-                          child: PieChart(
-                            PieChartData(
-                              sectionsSpace: 2,
-                              centerSpaceRadius: 60,
-                              sections: [
-                                PieChartSectionData(
-                                  color: CategoryColors.storage,
-                                  value: storage.usedPercentage,
-                                  title:
-                                      '${storage.usedPercentage.toStringAsFixed(1)}%',
-                                  radius: 50,
-                                  titleStyle: AppTextStyles.labelMedium
-                                      .copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                ),
-                                PieChartSectionData(
-                                  color: AppColors.glassSurface,
-                                  value: storage.freePercentage,
-                                  title:
-                                      '${storage.freePercentage.toStringAsFixed(1)}%',
-                                  radius: 50,
-                                  titleStyle: AppTextStyles.labelMedium
-                                      .copyWith(
-                                        color: AppColors.textSecondary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        InfoTile(
+                          label: 'Available Space',
+                          value: _formatBytes(storage.freeSpace),
+                          icon: Icons.folder_open,
+                          iconColor: Colors.green,
                         ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildLegendItem('Used', CategoryColors.storage),
-                            _buildLegendItem('Free', AppColors.glassSurface),
-                          ],
+                        InfoTile(
+                          label: 'Used Space',
+                          value: _formatBytes(storage.usedSpace),
+                          icon: Icons.folder,
+                          iconColor: Colors.orange,
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
 
-                  // Storage Details
-                  AppCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Storage Details',
-                          style: AppTextStyles.titleMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        InfoTile(
-                          label: 'Total Space',
-                          value: _formatBytes(storage.totalSpace),
-                          icon: Icons.sd_storage,
-                        ),
-                        InfoTile(
-                          label: 'Used Space',
-                          value: _formatBytes(storage.usedSpace),
-                          icon: Icons.folder,
-                        ),
-                        InfoTile(
-                          label: 'Free Space',
-                          value: _formatBytes(storage.freeSpace),
-                          icon: Icons.folder_open,
-                        ),
-                      ],
+                  // External Storage
+                  if (storage.externalTotalSpace != null &&
+                      storage.externalTotalSpace! > 0) ...[
+                    Text(
+                      'External Storage',
+                      style: AppTextStyles.headlineSmall.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-
-                  // External Storage (if available)
-                  if (storage.externalTotalSpace != null) ...[
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.md),
                     AppCard(
+                      padding: EdgeInsets.zero,
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.sd_card,
-                                color: CategoryColors.storage,
-                                size: AppIconSize.lg,
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              Text(
-                                'External Storage',
-                                style: AppTextStyles.titleLarge,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.md),
                           InfoTile(
-                            label: 'Total Space',
+                            label: 'SD Card Total',
                             value: _formatBytes(storage.externalTotalSpace!),
-                            icon: Icons.sd_storage,
+                            icon: Icons.sd_card,
+                            iconColor: CategoryColors.storage,
                           ),
                           InfoTile(
-                            label: 'Used Space',
-                            value: _formatBytes(storage.externalUsedSpace!),
-                            icon: Icons.folder,
-                          ),
-                          InfoTile(
-                            label: 'Free Space',
+                            label: 'SD Card Available',
                             value: _formatBytes(storage.externalFreeSpace!),
                             icon: Icons.folder_open,
+                            iconColor: Colors.green,
                           ),
                         ],
                       ),
@@ -193,29 +143,12 @@ class StorageDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
-    return Row(
-      children: [
-        Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        Text(label, style: AppTextStyles.labelMedium),
-      ],
-    );
-  }
-
   String _formatBytes(int bytes) {
     if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(2)} KB';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     if (bytes < 1024 * 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     }
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 }

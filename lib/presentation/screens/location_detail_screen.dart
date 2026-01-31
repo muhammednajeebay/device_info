@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../blocs/location/location_bloc.dart';
-import '../../utils/theme_constants.dart';
-import '../../utils/text_styles.dart';
-import '../widgets/info_tile.dart';
+import 'package:device_info/blocs/location/location_bloc.dart';
+import 'package:device_info/utils/theme_constants.dart';
+import 'package:device_info/utils/text_styles.dart';
+import 'package:device_info/presentation/widgets/app_card.dart';
+import 'package:device_info/presentation/widgets/info_tile.dart';
+import 'package:device_info/presentation/widgets/location_pulse_icon.dart';
 
 class LocationDetailScreen extends StatelessWidget {
   const LocationDetailScreen({super.key});
@@ -11,7 +13,7 @@ class LocationDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Location Information')),
+      appBar: AppBar(title: const Text('Location')),
       body: BlocBuilder<LocationBloc, LocationState>(
         builder: (context, state) {
           if (state is LocationLoading) {
@@ -23,21 +25,15 @@ class LocationDetailScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.location_off, size: 48, color: Colors.grey),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    state.message,
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.bodyMedium,
+                  Icon(
+                    Icons.location_off_rounded,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.error,
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      context.read<LocationBloc>().add(LoadLocationInfo());
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
-                  ),
+                  Text('Positioning Offline', style: AppTextStyles.titleLarge),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(state.message, style: AppTextStyles.bodySmall),
                 ],
               ),
             );
@@ -49,58 +45,131 @@ class LocationDetailScreen extends StatelessWidget {
               onRefresh: () async {
                 context.read<LocationBloc>().add(LoadLocationInfo());
               },
-              child: ListView(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                children: [
-                  _buildSection('Coordinates', [
-                    InfoTile(
-                      label: 'Latitude',
-                      value: (info.latitude ?? 0.0).toStringAsFixed(6),
-                      icon: Icons.location_on,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Hero Section: Map Pulse
+                    AppCard(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.xl,
+                      ),
+                      child: Center(
+                        child: LocationPulseIcon(
+                          color: CategoryColors.location,
+                        ),
+                      ),
                     ),
-                    InfoTile(
-                      label: 'Longitude',
-                      value: (info.longitude ?? 0.0).toStringAsFixed(6),
-                      icon: Icons.location_on,
+                    const SizedBox(height: AppSpacing.sectionSpacing),
+
+                    // Geographical Identity
+                    Text(
+                      'Geographical Matrix',
+                      style: AppTextStyles.headlineSmall.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ]),
-                  const SizedBox(height: AppSpacing.lg),
-                  _buildSection('Environment', [
-                    InfoTile(
-                      label: 'Altitude',
-                      value: '${(info.altitude ?? 0.0).toStringAsFixed(2)} m',
-                      icon: Icons.height,
+                    const SizedBox(height: AppSpacing.md),
+
+                    AppCard(
+                      padding: EdgeInsets.zero,
+                      child: Column(
+                        children: [
+                          InfoTile(
+                            label: 'Latitude Vector',
+                            value: (info.latitude ?? 0.0).toStringAsFixed(6),
+                            icon: Icons.north,
+                            iconColor: Colors.blue,
+                          ),
+                          InfoTile(
+                            label: 'Longitude Vector',
+                            value: (info.longitude ?? 0.0).toStringAsFixed(6),
+                            icon: Icons.east,
+                            iconColor: Colors.green,
+                          ),
+                          InfoTile(
+                            label: 'Positioning Source',
+                            value: (info.provider ?? 'Unknown').toUpperCase(),
+                            icon: Icons.satellite_alt,
+                            iconColor: Colors.purple,
+                          ),
+                        ],
+                      ),
                     ),
-                    InfoTile(
-                      label: 'Heading',
-                      value: '${(info.heading ?? 0.0).toStringAsFixed(2)}°',
-                      icon: Icons.explore,
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // Environmental Data
+                    Text(
+                      'Atmospheric Stats',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                    InfoTile(
-                      label: 'Speed',
-                      value: '${(info.speed ?? 0.0).toStringAsFixed(2)} m/s',
-                      icon: Icons.speed,
+                    const SizedBox(height: AppSpacing.sm),
+                    AppCard(
+                      padding: EdgeInsets.zero,
+                      child: Column(
+                        children: [
+                          InfoTile(
+                            label: 'Elevation Depth',
+                            value:
+                                '${(info.altitude ?? 0.0).toStringAsFixed(2)} m',
+                            icon: Icons.height,
+                            iconColor: Colors.cyan,
+                          ),
+                          InfoTile(
+                            label: 'Kinetic Velocity',
+                            value:
+                                '${(info.speed ?? 0.0).toStringAsFixed(2)} m/s',
+                            icon: Icons.speed,
+                            iconColor: Colors.orange,
+                          ),
+                          InfoTile(
+                            label: 'Navigation Heading',
+                            value:
+                                '${(info.heading ?? 0.0).toStringAsFixed(2)}°',
+                            icon: Icons.explore,
+                            iconColor: Colors.red,
+                          ),
+                        ],
+                      ),
                     ),
-                  ]),
-                  const SizedBox(height: AppSpacing.lg),
-                  _buildSection('Precision', [
-                    InfoTile(
-                      label: 'Accuracy',
-                      value: '${(info.accuracy ?? 0.0).toStringAsFixed(1)} m',
-                      icon: Icons.gps_fixed,
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // Integrity Metrics
+                    Text(
+                      'Link Integrity',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                    InfoTile(
-                      label: 'Provider',
-                      value: (info.provider ?? 'Unknown').toUpperCase(),
-                      icon: Icons.satellite_alt,
+                    const SizedBox(height: AppSpacing.sm),
+                    AppCard(
+                      padding: EdgeInsets.zero,
+                      child: Column(
+                        children: [
+                          InfoTile(
+                            label: 'Precision Margin',
+                            value:
+                                '${(info.accuracy ?? 0.0).toStringAsFixed(1)} m',
+                            icon: Icons.gps_fixed,
+                            iconColor: Colors.teal,
+                          ),
+                          InfoTile(
+                            label: 'Mock Verification',
+                            value: info.isMock ? 'SECURED / FAKE' : 'AUTHENTIC',
+                            icon: info.isMock ? Icons.security : Icons.verified,
+                            iconColor: info.isMock
+                                ? AppColors.warning
+                                : AppColors.success,
+                          ),
+                        ],
+                      ),
                     ),
-                    InfoTile(
-                      label: 'Mock Location',
-                      value: info.isMock ? 'Yes' : 'No',
-                      icon: Icons.security,
-                    ),
-                  ]),
-                ],
+                  ],
+                ),
               ),
             );
           }
@@ -108,35 +177,6 @@ class LocationDetailScreen extends StatelessWidget {
           return const SizedBox.shrink();
         },
       ),
-    );
-  }
-
-  Widget _buildSection(String title, List<Widget> children) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(
-            left: AppSpacing.md,
-            bottom: AppSpacing.sm,
-          ),
-          child: Text(
-            title,
-            style: AppTextStyles.titleMedium.copyWith(
-              color: CategoryColors.location,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        Card(
-          elevation: 0,
-          color: Colors.grey.withAlpha(13),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-          ),
-          child: Column(children: children),
-        ),
-      ],
     );
   }
 }

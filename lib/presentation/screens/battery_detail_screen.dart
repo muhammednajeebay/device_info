@@ -5,6 +5,7 @@ import '../../utils/theme_constants.dart';
 import '../../utils/text_styles.dart';
 import '../widgets/info_tile.dart';
 import '../widgets/app_card.dart';
+import '../widgets/liquid_wave_icon.dart';
 
 class BatteryDetailScreen extends StatelessWidget {
   const BatteryDetailScreen({super.key});
@@ -53,27 +54,104 @@ class BatteryDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Battery Level Card
+                  // Hero Card: Liquid Energy System
                   AppCard(
-                    child: Column(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Row(
                       children: [
-                        Icon(
-                          Icons.battery_charging_full,
-                          size: 64,
-                          color: CategoryColors.battery,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Text(
-                          '${battery.level}%',
-                          style: AppTextStyles.displayLarge.copyWith(
+                        // Left: Battery Container
+                        Hero(
+                          tag: 'battery_icon',
+                          child: LiquidWaveIcon(
+                            progress: battery.level / 100,
+                            isCharging: battery.status.toLowerCase().contains(
+                              'charging',
+                            ),
                             color: CategoryColors.battery,
+                            width: 100,
+                            height: 180,
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          battery.status,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: Theme.of(context).textTheme.bodySmall?.color,
+                        const SizedBox(width: AppSpacing.xxl),
+                        // Right: Primary Stats
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Battery Level',
+                                style: AppTextStyles.labelMedium.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                '${battery.level}%',
+                                style: AppTextStyles.displayLarge.copyWith(
+                                  fontSize: 48,
+                                  color: CategoryColors.battery,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.md,
+                                  vertical: AppSpacing.sm,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      (battery.status.toLowerCase().contains(
+                                                'charging',
+                                              )
+                                              ? CategoryColors.battery
+                                              : AppColors.glassSurface)
+                                          .withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.chip,
+                                  ),
+                                  border: Border.all(
+                                    color:
+                                        (battery.status.toLowerCase().contains(
+                                                  'charging',
+                                                )
+                                                ? CategoryColors.battery
+                                                : AppColors.glassBorder)
+                                            .withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      battery.status.toLowerCase().contains(
+                                            'charging',
+                                          )
+                                          ? Icons.bolt
+                                          : Icons.battery_std,
+                                      size: 16,
+                                      color:
+                                          battery.status.toLowerCase().contains(
+                                            'charging',
+                                          )
+                                          ? CategoryColors.battery
+                                          : AppColors.textSecondary,
+                                    ),
+                                    const SizedBox(width: AppSpacing.xs),
+                                    Text(
+                                      battery.status,
+                                      style: AppTextStyles.labelLarge.copyWith(
+                                        color:
+                                            battery.status
+                                                .toLowerCase()
+                                                .contains('charging')
+                                            ? CategoryColors.battery
+                                            : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -81,66 +159,71 @@ class BatteryDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.sectionSpacing),
 
-                  // Battery Details
-                  Text('Details', style: AppTextStyles.headlineSmall),
+                  // Secondary Metrics Grid
+                  Text(
+                    'Technical Specs',
+                    style: AppTextStyles.headlineSmall.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.md),
 
-                  AppCard(
-                    padding: EdgeInsets.zero,
-                    child: Column(
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    mainAxisSpacing: AppSpacing.md,
+                    crossAxisSpacing: AppSpacing.md,
+                    childAspectRatio: 1.5,
+                    children: [
+                      _buildMetricCard(
+                        'Voltage',
+                        '${battery.voltage} mV',
+                        Icons.bolt,
+                        Colors.blue,
+                      ),
+                      _buildMetricCard(
+                        'Temperature',
+                        '${(battery.temperature! / 10).toStringAsFixed(1)}°C',
+                        Icons.thermostat,
+                        Colors.orange,
+                      ),
+                      _buildMetricCard(
+                        'Health',
+                        battery.health ?? 'Unknown',
+                        Icons.favorite,
+                        Colors.red,
+                      ),
+                      _buildMetricCard(
+                        'Technology',
+                        battery.technology ?? 'N/A',
+                        Icons.science,
+                        Colors.purple,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Additional Info in Glass Tiles
+                  if (battery.capacity != null || battery.pluggedStatus != null)
+                    Column(
                       children: [
-                        InfoTile(
-                          label: 'Status',
-                          value: battery.status,
-                          icon: Icons.info_outline,
-                          iconColor: CategoryColors.battery,
-                        ),
-                        if (battery.pluggedStatus != null)
-                          InfoTile(
-                            label: 'Plugged',
-                            value: battery.pluggedStatus!,
-                            icon: Icons.power,
-                            iconColor: CategoryColors.battery,
-                          ),
-                        if (battery.health != null)
-                          InfoTile(
-                            label: 'Health',
-                            value: battery.health!,
-                            icon: Icons.favorite,
-                            iconColor: CategoryColors.battery,
-                          ),
-                        if (battery.technology != null)
-                          InfoTile(
-                            label: 'Technology',
-                            value: battery.technology!,
-                            icon: Icons.science,
-                            iconColor: CategoryColors.battery,
-                          ),
-                        if (battery.voltage != null)
-                          InfoTile(
-                            label: 'Voltage',
-                            value: '${battery.voltage} mV',
-                            icon: Icons.bolt,
-                            iconColor: CategoryColors.battery,
-                          ),
-                        if (battery.temperature != null)
-                          InfoTile(
-                            label: 'Temperature',
-                            value:
-                                '${(battery.temperature! / 10).toStringAsFixed(1)}°C',
-                            icon: Icons.thermostat,
-                            iconColor: CategoryColors.battery,
-                          ),
                         if (battery.capacity != null)
                           InfoTile(
                             label: 'Capacity',
                             value: '${battery.capacity} mAh',
-                            icon: Icons.battery_std,
+                            icon: Icons.battery_saver,
+                            iconColor: CategoryColors.battery,
+                          ),
+                        if (battery.pluggedStatus != null)
+                          InfoTile(
+                            label: 'Power Source',
+                            value: battery.pluggedStatus!,
+                            icon: Icons.power,
                             iconColor: CategoryColors.battery,
                           ),
                       ],
                     ),
-                  ),
                 ],
               ),
             );
@@ -148,6 +231,39 @@ class BatteryDetailScreen extends StatelessWidget {
 
           return const SizedBox.shrink();
         },
+      ),
+    );
+  }
+
+  Widget _buildMetricCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            label,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            value,
+            style: AppTextStyles.headlineSmall.copyWith(
+              color: AppColors.textPrimary,
+              fontSize: 16,
+            ),
+          ),
+        ],
       ),
     );
   }

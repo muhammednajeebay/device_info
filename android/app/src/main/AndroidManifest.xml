@@ -23,9 +23,9 @@
     
 
     <application
-        android:label="device_info"
+        android:label="DEVICE INFO"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"

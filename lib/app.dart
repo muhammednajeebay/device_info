@@ -7,6 +7,7 @@ import 'package:device_info/blocs/system/system_bloc.dart';
 import 'package:device_info/blocs/connectivity/connectivity_bloc.dart';
 import 'package:device_info/blocs/sensors/sensors_bloc.dart';
 import 'package:device_info/blocs/location/location_bloc.dart';
+import 'package:device_info/blocs/settings/settings_bloc.dart';
 import 'package:device_info/data/repositories/battery_repository.dart';
 import 'package:device_info/data/repositories/device_repository.dart';
 import 'package:device_info/data/repositories/storage_repository.dart';
@@ -21,7 +22,7 @@ import 'package:device_info/services/platform_channels/system_channel.dart';
 import 'package:device_info/services/platform_channels/connectivity_channel.dart';
 import 'package:device_info/services/platform_channels/sensors_channel.dart';
 import 'package:device_info/services/platform_channels/location_channel.dart';
-import 'package:device_info/presentation/screens/home_screen.dart';
+import 'package:device_info/presentation/screens/splash_screen.dart';
 import 'package:device_info/utils/app_theme.dart';
 
 class DeviceInfoApp extends StatelessWidget {
@@ -90,14 +91,15 @@ class DeviceInfoApp extends StatelessWidget {
                 LocationBloc(context.read<LocationRepository>())
                   ..add(LoadLocationInfo()),
           ),
+          BlocProvider<SettingsBloc>(create: (context) => SettingsBloc()),
         ],
         child: MaterialApp(
-          title: 'Device Info',
+          title: 'DEVICE INFO',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: ThemeMode.system,
-          home: const HomeScreen(),
+          home: const SplashScreen(),
         ),
       ),
     );

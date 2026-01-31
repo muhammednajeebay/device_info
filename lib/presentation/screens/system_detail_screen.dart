@@ -5,7 +5,7 @@ import 'package:device_info/utils/theme_constants.dart';
 import 'package:device_info/utils/text_styles.dart';
 import 'package:device_info/presentation/widgets/app_card.dart';
 import 'package:device_info/presentation/widgets/info_tile.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:device_info/presentation/widgets/system_pulse_flow.dart';
 
 class SystemDetailScreen extends StatelessWidget {
   const SystemDetailScreen({super.key});
@@ -13,7 +13,7 @@ class SystemDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('System'), elevation: 0),
+      appBar: AppBar(title: const Text('System')),
       body: BlocBuilder<SystemBloc, SystemState>(
         builder: (context, state) {
           if (state is SystemLoading) {
@@ -25,11 +25,21 @@ class SystemDetailScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: AppColors.error),
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    'Error: ${state.message}',
-                    style: AppTextStyles.bodyLarge,
+                    'Failed to load system info',
+                    style: AppTextStyles.titleLarge,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    state.message,
+                    style: AppTextStyles.bodySmall,
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -38,213 +48,95 @@ class SystemDetailScreen extends StatelessWidget {
 
           if (state is SystemLoaded) {
             final system = state.systemInfo;
-            final totalRam = system.totalRam ?? 0;
-            final availableRam = system.availableRam ?? 0;
-            final usedRam = totalRam - availableRam;
-            final ramUsagePercent = totalRam > 0
-                ? (usedRam / totalRam * 100)
-                : 0.0;
+            final double ramUsage = system.ramUsedPercentage ?? 0.0;
 
             return SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.screenPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // RAM Usage Chart
+                  // Hero Card: System Performance (Pulse & Flow)
                   AppCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.memory,
-                              color: CategoryColors.system,
-                              size: AppIconSize.lg,
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Text(
-                              'Memory Usage',
-                              style: AppTextStyles.titleLarge,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.xl),
-                        SizedBox(
-                          height: 200,
-                          child: BarChart(
-                            BarChartData(
-                              alignment: BarChartAlignment.spaceAround,
-                              maxY: totalRam.toDouble(),
-                              barTouchData: BarTouchData(enabled: false),
-                              titlesData: FlTitlesData(
-                                show: true,
-                                bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    getTitlesWidget: (value, meta) {
-                                      switch (value.toInt()) {
-                                        case 0:
-                                          return Text(
-                                            'Used',
-                                            style: AppTextStyles.labelSmall,
-                                          );
-                                        case 1:
-                                          return Text(
-                                            'Available',
-                                            style: AppTextStyles.labelSmall,
-                                          );
-                                        default:
-                                          return const SizedBox();
-                                      }
-                                    },
-                                  ),
-                                ),
-                                leftTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    reservedSize: 50,
-                                    getTitlesWidget: (value, meta) {
-                                      return Text(
-                                        _formatBytes(value.toInt()),
-                                        style: AppTextStyles.labelSmall,
-                                      );
-                                    },
-                                  ),
-                                ),
-                                topTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
-                                ),
-                                rightTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
-                                ),
-                              ),
-                              gridData: FlGridData(
-                                show: true,
-                                drawVerticalLine: false,
-                                horizontalInterval: totalRam > 0
-                                    ? totalRam / 4
-                                    : 1.0,
-                              ),
-                              borderData: FlBorderData(show: false),
-                              barGroups: [
-                                BarChartGroupData(
-                                  x: 0,
-                                  barRods: [
-                                    BarChartRodData(
-                                      toY: usedRam.toDouble(),
-                                      color: CategoryColors.system,
-                                      width: 40,
-                                      borderRadius: const BorderRadius.vertical(
-                                        top: Radius.circular(4),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                BarChartGroupData(
-                                  x: 1,
-                                  barRods: [
-                                    BarChartRodData(
-                                      toY: availableRam.toDouble(),
-                                      color: AppColors.success,
-                                      width: 40,
-                                      borderRadius: const BorderRadius.vertical(
-                                        top: Radius.circular(4),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Center(
-                          child: Text(
-                            '${ramUsagePercent.toStringAsFixed(1)}% Used',
-                            style: AppTextStyles.titleMedium.copyWith(
-                              color: CategoryColors.system,
-                            ),
-                          ),
-                        ),
-                      ],
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.xl,
+                      horizontal: AppSpacing.lg,
+                    ),
+                    child: SystemPulseFlow(
+                      ramUsage: ramUsage,
+                      cpuCores: system.cpuCores ?? 1,
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.sectionSpacing),
 
-                  // Memory Details
+                  // Resources Grid
+                  Text(
+                    'Resource Analytics',
+                    style: AppTextStyles.headlineSmall.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
                   AppCard(
+                    padding: EdgeInsets.zero,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Memory Details',
-                          style: AppTextStyles.titleMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
                         InfoTile(
-                          label: 'Total RAM',
-                          value: _formatBytes(totalRam),
+                          label: 'Total Memory',
+                          value: _formatBytes(system.totalRam ?? 0),
                           icon: Icons.memory,
+                          iconColor: CategoryColors.system,
                         ),
                         InfoTile(
-                          label: 'Available RAM',
-                          value: _formatBytes(availableRam),
-                          icon: Icons.check_circle,
+                          label: 'Available Memory',
+                          value: _formatBytes(system.availableRam ?? 0),
+                          icon: Icons.check_circle_outline,
+                          iconColor: AppColors.success,
                         ),
                         InfoTile(
-                          label: 'Used RAM',
-                          value: _formatBytes(usedRam),
-                          icon: Icons.pie_chart,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // CPU Details
-                  AppCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('CPU Details', style: AppTextStyles.titleMedium),
-                        const SizedBox(height: AppSpacing.md),
-                        InfoTile(
-                          label: 'CPU Cores',
-                          value: (system.cpuCores ?? 0).toString(),
-                          icon: Icons.developer_board,
-                        ),
-                        InfoTile(
-                          label: 'Architecture',
-                          value: system.cpuArchitecture ?? 'Unknown',
-                          icon: Icons.architecture,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Display Details
-                  AppCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Display Details',
-                          style: AppTextStyles.titleMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        InfoTile(
-                          label: 'Screen Resolution',
-                          value: system.screenResolution ?? 'Unknown',
-                          icon: Icons.screenshot,
-                        ),
-                        InfoTile(
-                          label: 'Screen Density',
+                          label: 'CPU Engine',
                           value:
-                              '${(system.screenDensity ?? 1.0).toStringAsFixed(2)}x',
-                          icon: Icons.grid_on,
+                              '${system.cpuCores} Cores @ ${system.cpuArchitecture}',
+                          icon: Icons.developer_board,
+                          iconColor: Colors.orange,
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Display Info
+                  Text(
+                    'Environment Info',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  AppCard(
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        InfoTile(
+                          label: 'Display Matrix',
+                          value: system.screenResolution ?? 'Unknown',
+                          icon: Icons.display_settings,
+                          iconColor: Colors.blue,
+                        ),
+                        InfoTile(
+                          label: 'Pixel Density',
+                          value:
+                              '${system.screenDensity?.toStringAsFixed(2)}x (DPI)',
+                          icon: Icons.grid_4x4,
+                          iconColor: Colors.cyan,
+                        ),
+                        if (system.kernelVersion != null)
+                          InfoTile(
+                            label: 'Kernel Architecture',
+                            value: system.kernelVersion!,
+                            icon: Icons.terminal,
+                            iconColor: Colors.green,
+                          ),
                       ],
                     ),
                   ),
@@ -261,10 +153,10 @@ class SystemDetailScreen extends StatelessWidget {
 
   String _formatBytes(int bytes) {
     if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(2)} KB';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     if (bytes < 1024 * 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
     }
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 }

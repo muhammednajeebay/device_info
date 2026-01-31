@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../blocs/sensors/sensors_bloc.dart';
-import '../../utils/theme_constants.dart';
-import '../../utils/text_styles.dart';
+import 'package:device_info/blocs/sensors/sensors_bloc.dart';
+import 'package:device_info/utils/theme_constants.dart';
+import 'package:device_info/utils/text_styles.dart';
+import 'package:device_info/presentation/widgets/app_card.dart';
+import 'package:device_info/presentation/widgets/info_tile.dart';
+import 'package:device_info/presentation/widgets/radar_sweep_icon.dart';
 
 class SensorsDetailScreen extends StatelessWidget {
   const SensorsDetailScreen({super.key});
@@ -10,7 +13,7 @@ class SensorsDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sensors Information')),
+      appBar: AppBar(title: const Text('Sensors')),
       body: BlocBuilder<SensorsBloc, SensorsState>(
         builder: (context, state) {
           if (state is SensorsLoading) {
@@ -22,15 +25,15 @@ class SensorsDetailScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(state.message),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<SensorsBloc>().add(LoadSensorsInfo());
-                    },
-                    child: const Text('Retry'),
+                  Icon(
+                    Icons.sensors_off,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.error,
                   ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text('Detection Failed', style: AppTextStyles.titleLarge),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(state.message, style: AppTextStyles.bodySmall),
                 ],
               ),
             );
@@ -38,76 +41,117 @@ class SensorsDetailScreen extends StatelessWidget {
 
           if (state is SensorsLoaded) {
             final sensors = state.sensorsData.availableSensors;
-            if (sensors.isEmpty) {
-              return const Center(
-                child: Text('No sensors found on this device.'),
-              );
-            }
 
             return RefreshIndicator(
               onRefresh: () async {
                 context.read<SensorsBloc>().add(LoadSensorsInfo());
               },
-              child: ListView.builder(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                itemCount: sensors.length,
-                itemBuilder: (context, index) {
-                  final sensor = sensors[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                    elevation: 0,
-                    color: Colors.grey.withAlpha(13),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                    ),
-                    child: ExpansionTile(
-                      leading: Icon(
-                        _getSensorIcon(sensor.type),
-                        color: Colors.blueAccent,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Hero Section: Radar Sweep
+                    AppCard(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.xl,
                       ),
-                      title: Text(
-                        sensor.name,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          fontWeight: FontWeight.bold,
+                      child: Center(
+                        child: RadarSweepIcon(
+                          color: CategoryColors.sensors,
+                          sensorCount: sensors.length,
                         ),
                       ),
-                      subtitle: Text(sensor.type),
-                      childrenPadding: const EdgeInsets.all(AppSpacing.md),
-                      children: [
-                        _buildDetail('Vendor', sensor.vendor),
-                        _buildDetail('Version', sensor.version.toString()),
-                        _buildDetail('Power', '${sensor.power} mA'),
-                        _buildDetail(
-                          'Resolution',
-                          sensor.resolution.toString(),
-                        ),
-                        _buildDetail(
-                          'Maximum Range',
-                          sensor.maximumRange.toString(),
-                        ),
-                      ],
                     ),
-                  );
-                },
+                    const SizedBox(height: AppSpacing.sectionSpacing),
+
+                    // Sensor Analytics
+                    Text(
+                      'Atmospheric Scanners',
+                      style: AppTextStyles.headlineSmall.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: sensors.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: AppSpacing.md),
+                      itemBuilder: (context, index) {
+                        final sensor = sensors[index];
+                        return AppCard(
+                          padding: EdgeInsets.zero,
+                          child: ExpansionTile(
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: CategoryColors.sensors.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                _getSensorIcon(sensor.type),
+                                color: CategoryColors.sensors,
+                              ),
+                            ),
+                            title: Text(
+                              sensor.name,
+                              style: AppTextStyles.labelMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            subtitle: Text(
+                              sensor.type,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            childrenPadding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.sm,
+                            ),
+                            children: [
+                              InfoTile(
+                                label: 'Manufacturer',
+                                value: sensor.vendor,
+                                icon: Icons.business,
+                                iconColor: Colors.blue,
+                              ),
+                              InfoTile(
+                                label: 'Power Consumption',
+                                value: '${sensor.power.toStringAsFixed(3)} mA',
+                                icon: Icons.electric_bolt,
+                                iconColor: Colors.yellow,
+                              ),
+                              InfoTile(
+                                label: 'Precision Matrix',
+                                value: sensor.resolution.toString(),
+                                icon: Icons.calculate,
+                                iconColor: Colors.orange,
+                              ),
+                              InfoTile(
+                                label: 'Field Magnitude',
+                                value: sensor.maximumRange.toString(),
+                                icon: Icons.straighten,
+                                iconColor: Colors.purple,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             );
           }
 
           return const SizedBox.shrink();
         },
-      ),
-    );
-  }
-
-  Widget _buildDetail(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
-        ],
       ),
     );
   }

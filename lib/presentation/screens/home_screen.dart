@@ -7,6 +7,9 @@ import '../../blocs/system/system_bloc.dart';
 import '../../blocs/connectivity/connectivity_bloc.dart';
 import '../../blocs/sensors/sensors_bloc.dart';
 import '../../blocs/location/location_bloc.dart';
+import '../../blocs/settings/settings_bloc.dart';
+import '../../blocs/settings/settings_state.dart';
+import '../../blocs/settings/settings_event.dart';
 import '../../utils/theme_constants.dart';
 import '../../utils/text_styles.dart';
 import '../widgets/category_card.dart';
@@ -19,6 +22,7 @@ import '../widgets/storage_bar_chart_icon.dart';
 import '../widgets/signal_propagation_icon.dart';
 import '../widgets/radar_sweep_icon.dart';
 import '../widgets/location_pulse_icon.dart';
+import '../widgets/page_transitions.dart';
 import 'battery_detail_screen.dart';
 import 'device_detail_screen.dart';
 import 'storage_detail_screen.dart';
@@ -81,42 +85,63 @@ class HomeScreen extends StatelessWidget {
                               );
                             },
                           ),
+                          Text(
+                            'Premium Hardware Intelligence',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: Colors.white70,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: AppColors.success.withOpacity(0.5),
+
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: AppColors.success.withOpacity(0.5),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.success,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'LIVE',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.success,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppColors.success,
-                                shape: BoxShape.circle,
-                              ),
+                          SizedBox(width: AppSpacing.md),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.tune_rounded,
+                              color: Colors.white,
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'LIVE',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.success,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ],
-                        ),
+                            onPressed: () => _showSettingsModal(context),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -260,9 +285,7 @@ class HomeScreen extends StatelessWidget {
                             : null,
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const BatteryDetailScreen(),
-                          ),
+                          ModernPageRoute(page: const BatteryDetailScreen()),
                         ),
                       ),
                     ),
@@ -283,9 +306,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const DeviceDetailScreen(),
-                          ),
+                          ModernPageRoute(page: const DeviceDetailScreen()),
                         ),
                       ),
                     ),
@@ -303,9 +324,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const StorageDetailScreen(),
-                          ),
+                          ModernPageRoute(page: const StorageDetailScreen()),
                         ),
                       ),
                     ),
@@ -323,9 +342,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const SystemDetailScreen(),
-                          ),
+                          ModernPageRoute(page: const SystemDetailScreen()),
                         ),
                       ),
                     ),
@@ -340,11 +357,12 @@ class HomeScreen extends StatelessWidget {
                         color: CategoryColors.connectivity,
                         animationWidget: const SignalPropagationIcon(
                           color: CategoryColors.connectivity,
+                          icon: Icons.wifi_rounded,
                         ),
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const ConnectivityDetailScreen(),
+                          ModernPageRoute(
+                            page: const ConnectivityDetailScreen(),
                           ),
                         ),
                       ),
@@ -360,12 +378,11 @@ class HomeScreen extends StatelessWidget {
                         color: CategoryColors.sensors,
                         animationWidget: const RadarSweepIcon(
                           color: CategoryColors.sensors,
+                          sensorCount: 8,
                         ),
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const SensorsDetailScreen(),
-                          ),
+                          ModernPageRoute(page: const SensorsDetailScreen()),
                         ),
                       ),
                     ),
@@ -383,9 +400,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const LocationDetailScreen(),
-                          ),
+                          ModernPageRoute(page: const LocationDetailScreen()),
                         ),
                       ),
                     ),
@@ -395,6 +410,96 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showSettingsModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0A0E21).withOpacity(0.95),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppRadius.xl),
+          ),
+          border: Border.all(color: Colors.white12, width: 1),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'System Configuration',
+              style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            BlocBuilder<SettingsBloc, SettingsState>(
+              builder: (context, state) {
+                return Column(
+                  children: [
+                    _buildSettingToggle(
+                      context,
+                      title: 'Reduced Motion',
+                      subtitle: 'Disable complex visual animations',
+                      value: state.reducedMotion,
+                      onChanged: (_) => context.read<SettingsBloc>().add(
+                        ToggleReducedMotion(),
+                      ),
+                      icon: Icons.motion_photos_off_rounded,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildSettingToggle(
+                      context,
+                      title: 'Low Power mode',
+                      subtitle: 'Optimize for battery life',
+                      value: state.lowPowerMode,
+                      onChanged: (_) => context.read<SettingsBloc>().add(
+                        ToggleLowPowerMode(),
+                      ),
+                      icon: Icons.battery_saver_rounded,
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: AppSpacing.xl),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingToggle(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required IconData icon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.blueAccent),
+        title: Text(
+          title,
+          style: AppTextStyles.titleMedium.copyWith(color: Colors.white),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
+        ),
+        trailing: Switch(
+          value: value,
+          onChanged: onChanged,
+          activeColor: Colors.blueAccent,
         ),
       ),
     );

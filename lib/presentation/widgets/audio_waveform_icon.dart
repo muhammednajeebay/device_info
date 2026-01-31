@@ -1,5 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../blocs/settings/settings_bloc.dart';
+import '../../blocs/settings/settings_state.dart';
 
 class AudioWaveformIcon extends StatefulWidget {
   final Color color;
@@ -43,31 +46,51 @@ class _AudioWaveformIconState extends State<AudioWaveformIcon>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 60,
-      height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(8, (index) {
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            width: 3,
-            height: 10 + (_heights[index] * 40),
-            decoration: BoxDecoration(
-              color: widget.color.withOpacity(0.5 + (_heights[index] * 0.5)),
-              borderRadius: BorderRadius.circular(2),
-              boxShadow: [
-                BoxShadow(
-                  color: widget.color.withOpacity(0.3),
-                  blurRadius: 4,
-                  spreadRadius: 1,
+    return BlocConsumer<SettingsBloc, SettingsState>(
+      listener: (context, state) {
+        if (state.reducedMotion) {
+          _controller.stop();
+          setState(() {
+            _heights = List.generate(8, (_) => 0.5);
+          });
+        } else if (!_controller.isAnimating) {
+          _controller.repeat();
+        }
+      },
+      builder: (context, state) {
+        return Container(
+          width: 60,
+          height: 60,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(8, (index) {
+              return AnimatedContainer(
+                duration: state.lowPowerMode
+                    ? const Duration(milliseconds: 300)
+                    : const Duration(milliseconds: 150),
+                width: 3,
+                height: 10 + (_heights[index] * 40),
+                decoration: BoxDecoration(
+                  color: widget.color.withOpacity(
+                    0.5 + (_heights[index] * 0.5),
+                  ),
+                  borderRadius: BorderRadius.circular(2),
+                  boxShadow: state.lowPowerMode
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: widget.color.withOpacity(0.3),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                          ),
+                        ],
                 ),
-              ],
-            ),
-          );
-        }),
-      ),
+              );
+            }),
+          ),
+        );
+      },
     );
   }
 }
