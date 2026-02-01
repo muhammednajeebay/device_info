@@ -390,7 +390,7 @@ class HomeScreen extends StatelessWidget {
                       builder: (context, state) => CategoryCard(
                         title: 'Location',
                         value: state is LocationLoaded
-                            ? '${state.locationInfo.latitude?.toStringAsFixed(2)}, ${state.locationInfo.longitude?.toStringAsFixed(2)}'
+                            ? '${state.locationInfo.latitude?.toStringAsFixed(2)??'N/A'}, ${state.locationInfo.longitude?.toStringAsFixed(2)??'N/A'}'
                             : '...',
                         subtitle: 'Animated Map Pulse',
                         icon: Icons.location_on_rounded,
