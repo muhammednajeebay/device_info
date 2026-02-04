@@ -132,6 +132,54 @@ Animations in Device Info are treated as a first-class citizen, strictly control
 
 ---
 
+## 🔄 How It Works: The Data Journey
+
+Device Info follows a reactive, multi-layered architecture to bridge the gap between high-level Flutter UI and low-level Native APIs.
+
+### 🏗️ Architectural Layers
+
+1.  **Presentation Layer (UI)**: Premium widgets that consume BLoC states to render real-time visualizations (`CustomPaint`, `AnimationController`).
+2.  **BLoC Layer (Business Logic)**: Decouples UI from logic. It handles events, manages state transitions, and orchestrates data streams.
+3.  **Data Layer (Repository)**: The single source of truth. It communicates with platform channels and maps raw data to strongly-typed Dart models.
+4.  **Service Layer (Platform Channels)**: The asynchronous bridge between Dart and Native code (Kotlin for Android, Swift for iOS).
+5.  **Native Platform**: Direct communication with the Operating System's hardware APIs (e.g., `BatteryManager`, `SensorManager`).
+
+### 🛰️ Real-Time Data Flow
+
+The following diagram illustrates how a hardware metric (like Battery Level) travels from the Silicon to your Screen:
+
+```mermaid
+graph TD
+    A[Native OS API] -->|Event/Method Signal| B[Native Platform Code]
+    B -->|Platform Channel Bridge| C[Service Layer]
+    C -->|Stream/Future| D[Data Repository]
+    D -->|Mapped Model| E[BLoC]
+    E -->|State Update| F[UI Layer]
+    F -->|Render/Paint| G((Premium Visualization))
+    
+    style G fill:#00b4d8,stroke:#333,stroke-width:2px
+    
+    subgraph "Native Side (Kotlin/Swift)"
+    A
+    B
+    end
+    
+    subgraph "Flutter Side (Dart)"
+    C
+    D
+    E
+    F
+    G
+    end
+```
+
+### ⚡ Key Communication Patterns
+
+*   **Request-Response (MethodChannels)**: Used for static or infrequent data fetching (e.g., Device Hardware Specs, OS Versions).
+*   **Reactive Streaming (EventChannels)**: Used for high-frequency or asynchronous data (e.g., Live Battery tracking, Real-time Sensor telemetry). This ensures the UI stays "Live" without constant polling, significantly reducing battery consumption.
+
+---
+
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
