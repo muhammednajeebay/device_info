@@ -14,10 +14,19 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.MethodChannel
 
+/**
+ * LocationChannel: Handles geographic location fetching and permission management.
+ * 
+ * Usage:
+ * - MethodChannel: Triggered on user request or map view initialization.
+ */
 class LocationChannel(private val activity: Activity) {
     private val locationManager = activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val REQ_LOCATION = 1001
 
+    /**
+     * Set up the MethodChannel handler for "getCurrentLocation".
+     */
     fun setupMethodChannel(channel: MethodChannel) {
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
@@ -29,6 +38,10 @@ class LocationChannel(private val activity: Activity) {
         }
     }
 
+    /**
+     * Orchestrates the location request: checks permissions, looks for last known location,
+     * or requests a fresh update if needed.
+     */
     private fun handleLocationRequest(result: MethodChannel.Result) {
         if (!hasPermissions()) {
             requestPermissions()
@@ -37,10 +50,12 @@ class LocationChannel(private val activity: Activity) {
         }
 
         try {
+            // Optimization: Try to get the last known location quickly
             val lastKnown = getCurrentLocationFromLastKnown()
             if (lastKnown != null) {
                 result.success(lastKnown)
             } else {
+                // If no last known, trigger a fresh GPS/Network scan
                 requestFreshLocation(result)
             }
         } catch (e: Exception) {
@@ -48,11 +63,13 @@ class LocationChannel(private val activity: Activity) {
         }
     }
 
+    /** Checks if the app has GPS or Network location permissions. */
     private fun hasPermissions(): Boolean {
         return ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
                ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
 
+    /** Prompts the user for location permissions at runtime. */
     private fun requestPermissions() {
         ActivityCompat.requestPermissions(
             activity,
@@ -61,6 +78,7 @@ class LocationChannel(private val activity: Activity) {
         )
     }
 
+    /** Attempts to get the last cached location from any available provider (GPS, Network). */
     @SuppressLint("MissingPermission")
     private fun getCurrentLocationFromLastKnown(): Map<String, Any?>? {
         val providers = locationManager.getProviders(true)
@@ -68,6 +86,7 @@ class LocationChannel(private val activity: Activity) {
         
         for (provider in providers) {
             val l = locationManager.getLastKnownLocation(provider) ?: continue
+            // Use the most accurate location available
             if (bestLocation == null || l.accuracy < bestLocation!!.accuracy) {
                 bestLocation = l
             }
@@ -76,6 +95,10 @@ class LocationChannel(private val activity: Activity) {
         return bestLocation?.let { locationToMap(it) }
     }
 
+    /** 
+     * Requests a single high-accuracy location update from the OS. 
+     * Triggered when last known location is unavailable.
+     */
     @SuppressLint("MissingPermission")
     private fun requestFreshLocation(result: MethodChannel.Result) {
         val provider = if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -93,7 +116,7 @@ class LocationChannel(private val activity: Activity) {
 
         val listener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
-                locationManager.removeUpdates(this)
+                locationManager.removeUpdates(this) // Unsubscribe once we get a result
                 result.success(locationToMap(location))
             }
             @Deprecated("Deprecated in Java")
@@ -105,6 +128,19 @@ class LocationChannel(private val activity: Activity) {
         locationManager.requestSingleUpdate(provider, listener, null)
     }
 
+    /**
+     * Converts an Android Location object to a Dart-friendly Map.
+     * 
+     * Output (Map returned to Flutter):
+     * - "latitude": Double
+     * - "longitude": Double
+     * - "altitude": Double
+     * - "accuracy": Float (meters)
+     * - "speed": Float (m/s)
+     * - "heading": Double (bearing in degrees)
+     * - "provider": String ("gps", "network")
+     * - "isMock": Boolean (If location is spoofed)
+     */
     private fun locationToMap(location: Location): Map<String, Any?> {
         return mapOf(
             "latitude" to location.latitude,

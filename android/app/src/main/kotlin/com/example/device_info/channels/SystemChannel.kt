@@ -7,8 +7,17 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.RandomAccessFile
 
+/**
+ * SystemChannel: Fetches CPU, RAM, and Display specifications.
+ * 
+ * Usage:
+ * - MethodChannel: Triggered to populate the "Processor" and "System Health" widgets.
+ */
 class SystemChannel(private val context: Context) {
     
+    /**
+     * Set up the MethodChannel handler to respond to various system-related calls.
+     */
     fun setupMethodChannel(channel: MethodChannel) {
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
@@ -41,6 +50,17 @@ class SystemChannel(private val context: Context) {
         }
     }
     
+    /**
+     * Aggregates CPU cores, RAM status, and screen resolution.
+     * 
+     * Output (Map returned to Flutter):
+     * - "cpuCores": Int (Available processors)
+     * - "cpuArchitecture": String (Primary ABI)
+     * - "totalRam": Long (Total device bytes)
+     * - "availableRam": Long (Currently free bytes)
+     * - "screenResolution": String (e.g., "1080x2400")
+     * - "screenDensity": Double
+     */
     private fun getSystemInfo(): Map<String, Any?> {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val memoryInfo = ActivityManager.MemoryInfo()
@@ -60,6 +80,7 @@ class SystemChannel(private val context: Context) {
         )
     }
     
+    /** Fetches core count and architecture. */
     private fun getCpuInfo(): Map<String, Any?> {
         val cores = Runtime.getRuntime().availableProcessors()
         val architecture = Build.SUPPORTED_ABIS[0]
@@ -70,6 +91,7 @@ class SystemChannel(private val context: Context) {
         )
     }
     
+    /** Fetches detailed RAM metrics from ActivityManager. */
     private fun getMemoryInfo(): Map<String, Any?> {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val memoryInfo = ActivityManager.MemoryInfo()
@@ -78,7 +100,7 @@ class SystemChannel(private val context: Context) {
         return mapOf(
             "totalRam" to memoryInfo.totalMem,
             "availableRam" to memoryInfo.availMem,
-            "freeRam" to memoryInfo.availMem,
+            "freeRam" to memoryInfo.availMem, // availMem is the free memory on Android
             "lowMemory" to memoryInfo.lowMemory
         )
     }

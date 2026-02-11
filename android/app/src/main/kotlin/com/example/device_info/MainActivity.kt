@@ -12,6 +12,10 @@ import com.example.device_info.channels.ConnectivityChannel
 import com.example.device_info.channels.SensorsChannel
 import com.example.device_info.channels.LocationChannel
 
+/**
+ * MainActivity: The entry point of the Android application.
+ * This class orchestrates the initialization and mapping of all Native -> Flutter communication channels.
+ */
 class MainActivity : FlutterActivity() {
     private lateinit var batteryChannel: BatteryChannel
     private lateinit var deviceChannel: DeviceChannel
@@ -21,10 +25,17 @@ class MainActivity : FlutterActivity() {
     private lateinit var sensorsChannel: SensorsChannel
     private lateinit var locationChannel: LocationChannel
     
+    /**
+     * configureFlutterEngine: Lifecycle hook where we register our platform channels.
+     * Logic:
+     * 1. Initialize channel logic classes with context.
+     * 2. Define MethodChannels (Request-Response) and EventChannels (Streams).
+     * 3. Attach handlers to bridge custom logic to Flutter.
+     */
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         
-        // Initialize channels
+        // 1. Initialize logic controllers
         batteryChannel = BatteryChannel(this)
         deviceChannel = DeviceChannel(this)
         storageChannel = StorageChannel(this)
@@ -33,7 +44,7 @@ class MainActivity : FlutterActivity() {
         sensorsChannel = SensorsChannel(this)
         locationChannel = LocationChannel(this)
         
-        // Setup Battery Channel
+        // 2. Setup Battery Channels (Method & Event)
         val batteryMethodChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "com.example.device_info/battery"
@@ -46,42 +57,42 @@ class MainActivity : FlutterActivity() {
         )
         batteryChannel.setupEventChannel(batteryEventChannel)
         
-        // Setup Device Channel
+        // 3. Setup Device Identity Channel
         val deviceMethodChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "com.example.device_info/device"
         )
         deviceChannel.setupMethodChannel(deviceMethodChannel)
         
-        // Setup Storage Channel
+        // 4. Setup Storage Statistics Channel
         val storageMethodChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "com.example.device_info/storage"
         )
         storageChannel.setupMethodChannel(storageMethodChannel)
         
-        // Setup System Channel
+        // 5. Setup CPU/RAM System Channel
         val systemMethodChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "com.example.device_info/system"
         )
         systemChannel.setupMethodChannel(systemMethodChannel)
 
-        // Setup Connectivity Channel
+        // 6. Setup Network Connectivity Channel
         val connectivityMethodChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "com.example.device_info/connectivity"
         )
         connectivityChannel.setupMethodChannel(connectivityMethodChannel)
 
-        // Setup Sensors Channel
+        // 7. Setup Sensor Hardware Channel
         val sensorsMethodChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "com.example.device_info/sensors"
         )
         sensorsChannel.setupMethodChannel(sensorsMethodChannel)
 
-        // Setup Location Channel
+        // 8. Setup GPS Location Channel
         val locationMethodChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "com.example.device_info/location"

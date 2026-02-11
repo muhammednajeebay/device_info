@@ -6,8 +6,17 @@ import android.os.StatFs
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
+/**
+ * StorageChannel: Calculates internal and external disk space usage.
+ * 
+ * Usage:
+ * - MethodChannel: Triggered to populate the "Storage Insights" donut chart.
+ */
 class StorageChannel(private val context: Context) {
     
+    /**
+     * Set up the MethodChannel handler to respond to "getStorageInfo" calls from Flutter.
+     */
     fun setupMethodChannel(channel: MethodChannel) {
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
@@ -24,7 +33,20 @@ class StorageChannel(private val context: Context) {
         }
     }
     
+    /**
+     * Uses StatFs to query volume statistics for internal and (optional) external storage.
+     * 
+     * Output (Map returned to Flutter):
+     * - "totalSpace": Long (Total internal bytes)
+     * - "freeSpace": Long (Available internal bytes)
+     * - "usedSpace": Long (Calculated internal bytes)
+     * - "externalTotalSpace": Long? (Total SD card bytes)
+     * - "externalFreeSpace": Long? (Available SD card bytes)
+     * - "externalUsedSpace": Long? (Calculated SD card bytes)
+     * - "hasExternalStorage": Boolean (True if SD card is mounted)
+     */
     private fun getStorageInfo(): Map<String, Any?> {
+        // Internal Storage query
         val internalPath = Environment.getDataDirectory()
         val internalStat = StatFs(internalPath.path)
         
@@ -36,7 +58,7 @@ class StorageChannel(private val context: Context) {
         val internalFree = internalAvailableBlocks * internalBlockSize
         val internalUsed = internalTotal - internalFree
         
-        // External storage
+        // External storage check
         val externalState = Environment.getExternalStorageState()
         val hasExternal = externalState == Environment.MEDIA_MOUNTED
         
@@ -46,6 +68,7 @@ class StorageChannel(private val context: Context) {
         
         if (hasExternal) {
             try {
+                // Secondary volume query
                 val externalPath = Environment.getExternalStorageDirectory()
                 val externalStat = StatFs(externalPath.path)
                 
@@ -57,7 +80,7 @@ class StorageChannel(private val context: Context) {
                 externalFree = externalAvailableBlocks * externalBlockSize
                 externalUsed = externalTotal - externalFree
             } catch (e: Exception) {
-                // External storage not available
+                // External storage unreadable (permissions or media issue)
             }
         }
         

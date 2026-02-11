@@ -5,8 +5,17 @@ import android.hardware.Sensor
 import android.hardware.SensorManager
 import io.flutter.plugin.common.MethodChannel
 
+/**
+ * SensorsChannel: Enumerates all physical and virtual sensors available on the device.
+ * 
+ * Usage:
+ * - MethodChannel: Triggered to display the "Sensor Radar" list.
+ */
 class SensorsChannel(private val context: Context) {
 
+    /**
+     * Set up the MethodChannel handler to respond to "getAvailableSensors" calls from Flutter.
+     */
     fun setupMethodChannel(channel: MethodChannel) {
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
@@ -23,6 +32,20 @@ class SensorsChannel(private val context: Context) {
         }
     }
 
+    /**
+     * Queries the Android SensorManager for the list of all available hardware sensors.
+     * 
+     * Output (Map returned to Flutter):
+     * - "availableSensors": List<Map<String, Any?>>
+     *   Each sensor map contains:
+     *   - "name": String (Marketing name of the sensor)
+     *   - "type": String (Human-readable type, e.g., "Accelerometer")
+     *   - "vendor": String (Manufacturer of the sensor part)
+     *   - "version": Int
+     *   - "power": Float (mA)
+     *   - "resolution": Float
+     *   - "maximumRange": Float
+     */
     private fun getAvailableSensors(): Map<String, Any?> {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
         val sensorList = sensorManager.getSensorList(Sensor.TYPE_ALL)
@@ -44,6 +67,9 @@ class SensorsChannel(private val context: Context) {
         )
     }
 
+    /**
+     * Map integer sensor types to friendly display strings.
+     */
     private fun getSensorTypeString(type: Int): String {
         return when (type) {
             Sensor.TYPE_ACCELEROMETER -> "Accelerometer"
